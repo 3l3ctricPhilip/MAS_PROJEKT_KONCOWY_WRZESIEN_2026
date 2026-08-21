@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -52,7 +53,15 @@ public class NewConcertView extends VerticalLayout {
         //PRZYCISK ZAPISU I ANULOWANIA
 
         saveButton = new Button("Zapisz", event -> {
-            UI.getCurrent().navigate(MainView.class);
+            try {
+                concert.setStatus(ConcertStatus.PLANNED);
+                // brak mechanizmu autentykacji — booker ID hardcoded
+                concertService.saveConcert(concert, 1L);
+                Notification.show("Koncert został zapisany", 3000, Notification.Position.TOP_CENTER);
+                UI.getCurrent().navigate(MainView.class);
+            } catch (Exception e) {
+                Notification.show("Błąd: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER);
+            }
         });
 
         saveButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -126,44 +135,6 @@ public class NewConcertView extends VerticalLayout {
             }
         });
 
-
-//        bandSelect.addValueChangeListener(event -> {
-//            Set<Band> selectedBands = event.getValue();
-//
-//            List<BandConcertParticipation> existing = new ArrayList<>(concert.getParticipations());
-//
-//            LocalTime defaultStart = startDateTime.getValue() != null
-//                    ? startDateTime.getValue().toLocalTime() : LocalTime.of(20, 0);
-//            LocalTime defaultEnd = endDateTime.getValue() != null
-//                    ? endDateTime.getValue().toLocalTime() : LocalTime.of(22, 0);
-//
-//
-//            for (BandConcertParticipation bandConcertParticipation : existing) {
-//                if (!selectedBands.contains(bandConcertParticipation.getBand())) {
-//                    concert.getParticipations().remove(bandConcertParticipation);
-//                }
-//            }
-//
-//            Set<Band> existingBands = existing.stream()
-//                    .map(BandConcertParticipation::getBand)
-//                    .collect(Collectors.toSet());
-//
-//            for (Band band : selectedBands) {
-//                if (!existingBands.contains(band)) {
-//                    BandConcertParticipation bandConcertParticipation = new BandConcertParticipation(concert, band, defaultStart, defaultEnd);
-//                    concert.getParticipations().add(bandConcertParticipation);
-//                }
-//            }
-//
-//            participationRows.clear();
-//            for (BandConcertParticipation bandConcertParticipation : concert.getParticipations()) {
-//                participationRows.add(new ParticipationRow(bandConcertParticipation));
-//            }
-//            grid.setItems(participationRows);
-//            validateOverlaps(saveButton);
-//        });
-
-
         //GRID DO UTWORZEBNIA TIMETABLE KONCERTU
 
         Grid<TimetableRow> grid = new Grid<>();
@@ -181,8 +152,6 @@ public class NewConcertView extends VerticalLayout {
 
                 updateSaveButton();
             });
-
-
             return timetableRow.startBandConcert;
         }).setHeader("Godzina rozpoczęcia").setWidth("200px");
 
@@ -252,7 +221,6 @@ public class NewConcertView extends VerticalLayout {
                             bandConcertParticipation.getBand().equals(band));
                 }
             }
-
             grid.setItems(timetableRows);
 
             updateSaveButton();
@@ -284,12 +252,12 @@ public class NewConcertView extends VerticalLayout {
         return false;
     }
 
-    void updateSaveButton(){
+    void updateSaveButton() {
         saveButton.setEnabled(
                 binder.isValid()
-                && !concert.getParticipations().isEmpty()
-                && !hasOverlaps()
-                && !hasInvalidTimeRange()
+                        && !concert.getParticipations().isEmpty()
+                        && !hasOverlaps()
+                        && !hasInvalidTimeRange()
         );
     }
 
@@ -306,311 +274,4 @@ public class NewConcertView extends VerticalLayout {
         }
 
     }
-
-
-//    private final GenreService genreService;
-//    private final BandService bandService;
-//    private final ConcertService concertService;
-//
-//    private final Concert concert = new Concert();
-//    private final Binder<Concert> binder = new Binder<>(Concert.class);
-//    private final List<ParticipationRow> participationRows = new ArrayList<>();
-//    // flaga zapobiegająca cyklicznemu wywołaniu listenera bandSelect, gdy genreSelect programowo zmienia jego items/value
-//    private boolean suppressBandListener = false;
-//
-//    public NewConcertView(GenreService genreService, BandService bandService,
-//                          ConcertService concertService) {
-//
-//        this.genreService = genreService;
-//        this.bandService = bandService;
-//        this.concertService = concertService;
-//
-//        TextField title = new TextField("Nazwa koncertu");
-//        title.setWidth("500px");
-//
-//        DateTimePicker startTime = new DateTimePicker("Start");
-//        DateTimePicker endTime = new DateTimePicker("Koniec");
-//
-//        TextField priceOfTicket = new TextField("Cena biletu");
-//        priceOfTicket.setWidth("300px");
-//
-//        MultiSelectComboBox<Genre> genreSelect = new MultiSelectComboBox<>("Gatunek muzyczny");
-//        genreSelect.setItems(genreService.getAllGenres());
-//        genreSelect.setItemLabelGenerator(Genre::getName);
-//        genreSelect.setWidth("500px");
-//
-//        MultiSelectComboBox<Band> bandSelect = new MultiSelectComboBox<>("Zespoły");
-//        bandSelect.setItemLabelGenerator(Band::getName);
-//        bandSelect.setWidth("500px");
-//        bandSelect.setEnabled(false);
-//        bandSelect.setTooltipText("Wybierz gatunki, aby zobaczyć dostępne zespoły");
-//
-//        Button saveButton = new Button("Zapisz", e ->
-//                UI.getCurrent().navigate(MainView.class));
-//        saveButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-//        saveButton.setEnabled(false);
-//
-//        Grid<ParticipationRow> grid = new Grid<>();
-//        grid.setWidth("800px");
-//
-//        grid.addColumn(row -> row.participation.getBand().getName())
-//                .setHeader("Zespół").setAutoWidth(true);
-//
-//        grid.addComponentColumn(row -> {
-//            if (startTime.getValue() != null) row.startPicker.setMin(startTime.getValue().toLocalTime());
-//            if (endTime.getValue() != null) row.startPicker.setMax(endTime.getValue().toLocalTime());
-//            row.startPicker.addValueChangeListener(e -> {
-//                row.participation.setStart(e.getValue());
-//                validateParticipationTimeRange(row);
-//                validateOverlaps(saveButton);
-//            });
-//            return row.startPicker;
-//        }).setHeader("Godzina rozpoczęcia").setWidth("200px");
-//
-//        grid.addComponentColumn(row -> {
-//            if (startTime.getValue() != null) row.endPicker.setMin(startTime.getValue().toLocalTime());
-//            if (endTime.getValue() != null) row.endPicker.setMax(endTime.getValue().toLocalTime());
-//            row.endPicker.addValueChangeListener(e -> {
-//                row.participation.setEnd(e.getValue());
-//                validateParticipationTimeRange(row);
-//                validateOverlaps(saveButton);
-//            });
-//            return row.endPicker;
-//        }).setHeader("Godzina zakończenia").setWidth("200px");
-//
-//        grid.addComponentColumn(row -> {
-//            // usunięcie zespołu przez zmianę wartości bandSelect, a nie bezpośrednio z listy — deleguje do bandSelect listenera, który spójnie aktualizuje participations i grid
-//            Button removeBtn = new Button("Usuń");
-//            removeBtn.addClickListener(e -> {
-//                Set<Band> current = new HashSet<>(bandSelect.getValue());
-//                current.remove(row.participation.getBand());
-//                bandSelect.setValue(current);
-//            });
-//            return removeBtn;
-//        }).setWidth("120px");
-//
-//        startTime.addValueChangeListener(e -> {
-//            LocalTime min = e.getValue() != null ? e.getValue().toLocalTime() : null;
-//            participationRows.forEach(row -> {
-//                row.startPicker.setMin(min);
-//                row.endPicker.setMin(min);
-//            });
-//        });
-//
-//        endTime.addValueChangeListener(e -> {
-//            LocalTime max = e.getValue() != null ? e.getValue().toLocalTime() : null;
-//            participationRows.forEach(row -> {
-//                row.startPicker.setMax(max);
-//                row.endPicker.setMax(max);
-//            });
-//        });
-//
-//
-//        genreSelect.addValueChangeListener(event -> {
-//            Set<Genre> selected = event.getValue();
-//            suppressBandListener = true;
-//            if (selected == null || selected.isEmpty()) {
-//                bandSelect.setItems();
-//                bandSelect.setEnabled(false);
-//
-//                concert.getParticipations().clear();
-//                participationRows.clear();
-//                grid.setItems(participationRows);
-//                validateOverlaps(saveButton);
-//            } else {
-//                Set<Band> previouslySelected = new HashSet<>(bandSelect.getValue());
-//                Set<Band> availableBands = bandService.getBandsByGenres(selected);
-//
-//                bandSelect.setItems(availableBands);
-//                bandSelect.setEnabled(true);
-//
-//                Set<Band> retained = previouslySelected.stream()
-//                        .filter(availableBands::contains)
-//                        .collect(Collectors.toSet());
-//                bandSelect.setValue(retained);
-//
-//                concert.getParticipations().removeIf(cp -> !retained.contains(cp.getBand()));
-//                participationRows.clear();
-//                for (BandConcertParticipation cp : concert.getParticipations()) {
-//                    participationRows.add(new ParticipationRow(cp));
-//                }
-//                grid.setItems(participationRows);
-//                validateOverlaps(saveButton);
-//            }
-//            suppressBandListener = false;
-//        });
-//
-//
-//        bandSelect.addValueChangeListener(event -> {
-//            if (suppressBandListener) return;
-//            Set<Band> selectedBands = event.getValue();
-//
-//            List<BandConcertParticipation> existing = new ArrayList<>(concert.getParticipations());
-//
-//
-//            LocalTime defaultStart = startTime.getValue() != null
-//                    ? startTime.getValue().toLocalTime() : LocalTime.of(20, 0);
-//            LocalTime defaultEnd = endTime.getValue() != null
-//                    ? endTime.getValue().toLocalTime() : LocalTime.of(22, 0);
-//
-//
-//            for (BandConcertParticipation bandConcertParticipation : existing) {
-//                if (!selectedBands.contains(bandConcertParticipation.getBand())) {
-//                    concert.getParticipations().remove(bandConcertParticipation);
-//                }
-//            }
-//
-//            Set<Band> existingBands = existing.stream()
-//                    .map(BandConcertParticipation::getBand)
-//                    .collect(Collectors.toSet());
-//
-//            for (Band band : selectedBands) {
-//                if (!existingBands.contains(band)) {
-//                    BandConcertParticipation bandConcertParticipation = new BandConcertParticipation(concert, band, defaultStart, defaultEnd);
-//                    concert.getParticipations().add(bandConcertParticipation);
-//                }
-//            }
-//
-//            participationRows.clear();
-//            for (BandConcertParticipation bandConcertParticipation : concert.getParticipations()) {
-//                participationRows.add(new ParticipationRow(bandConcertParticipation));
-//            }
-//            grid.setItems(participationRows);
-//            validateOverlaps(saveButton);
-//        });
-//
-//        binder.forField(title)
-//                .asRequired("Nazwa koncertu jest wymagana")
-//                .bind(Event::getName, Event::setName);
-//
-//        binder.forField(startTime)
-//                .asRequired("Data i godzina startu są wymagane")
-//                .withValidator(
-//                        s -> endTime.getValue() == null || s.isBefore(endTime.getValue()),
-//                        "Start musi być przed końcem"
-//                )
-//                .bind(Event::getStart, Event::setStart);
-//
-//        binder.forField(endTime)
-//                .asRequired("Data i godzina zakończenia są wymagane")
-//                .withValidator(
-//                        e -> startTime.getValue() == null || e.isAfter(startTime.getValue()),
-//                        "Koniec musi być po starcie"
-//                )
-//                .bind(Event::getEnd, Event::setEnd);
-//
-//        binder.forField(priceOfTicket)
-//                .asRequired("Cena biletu jest wymagana")
-//                .withValidator(price -> {
-//                    try {
-//                        return new BigDecimal(price).compareTo(BigDecimal.ZERO) > 0;
-//                    } catch (NumberFormatException ex) {
-//                        return false;
-//                    }
-//                }, "Cena biletu musi być liczbą większą od 0")
-//                .bind(
-//                        c -> c.getTicketPrice() != null ? c.getTicketPrice().toString() : "",
-//                        (c, price) -> c.setTicketPrice(new BigDecimal(price))
-//                );
-//
-//        binder.addStatusChangeListener(event -> updateSaveButton(saveButton));
-//
-//        saveButton.addClickListener(event -> {
-//            if (hasOverlaps()) {
-//                Notification.show("Nie można zapisać — godziny zespołów nakładają się",
-//                        3000, Notification.Position.TOP_CENTER);
-//                return;
-//            }
-//            try {
-//                concert.setName(title.getValue());
-//                concert.setStart(startTime.getValue());
-//                concert.setEnd(endTime.getValue());
-//                concert.setDate(startTime.getValue().toLocalDate());
-//                concert.setTicketPrice(new BigDecimal(priceOfTicket.getValue()));
-//                concert.setStatus(ConcertStatus.PLANNED);
-//
-//                // brak mechanizmu autentykacji — booker ID hardcoded
-//                concertService.saveConcert(concert, 1L);
-//                Notification.show("Koncert został zapisany", 3000, Notification.Position.TOP_CENTER);
-//            } catch (Exception e) {
-//                Notification.show("Błąd: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER);
-//            }
-//        });
-//
-//        Button cancelButton = new Button("Anuluj", e ->
-//                UI.getCurrent().navigate(MainView.class));
-//        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-//
-//        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-//        add(title, startTime, endTime, priceOfTicket, genreSelect, bandSelect, grid, buttons);
-//    }
-//
-//    private void validateOverlaps(Button saveButton) {
-//        List<BandConcertParticipation> list = new ArrayList<>(concert.getParticipations());
-//        for (int i = 0; i < list.size(); i++) {
-//            for (int j = i + 1; j < list.size(); j++) {
-//                BandConcertParticipation a = list.get(i);
-//                BandConcertParticipation b = list.get(j);
-//                if (a.getStart().isBefore(b.getEnd()) && a.getEnd().isAfter(b.getStart())) {
-//                    Notification.show(
-//                            "Godziny zespołów " + a.getBand().getName() + " i " + b.getBand().getName() + " nakładają się",
-//                            3000, Notification.Position.TOP_CENTER);
-//                    saveButton.setEnabled(false);
-//                    return;
-//                }
-//            }
-//        }
-//        updateSaveButton(saveButton);
-//    }
-//
-//    private boolean hasOverlaps() {
-//        List<BandConcertParticipation> list = new ArrayList<>(concert.getParticipations());
-//        for (int i = 0; i < list.size(); i++) {
-//            for (int j = i + 1; j < list.size(); j++) {
-//                BandConcertParticipation a = list.get(i);
-//                BandConcertParticipation b = list.get(j);
-//                if (a.getStart().isBefore(b.getEnd()) && a.getEnd().isAfter(b.getStart())) {
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
-//
-//    private void validateParticipationTimeRange(ParticipationRow row) {
-//        boolean invalid = row.participation.getStart() != null && row.participation.getEnd() != null
-//                && !row.participation.getStart().isBefore(row.participation.getEnd());
-//        String error = invalid ? "Start musi być przed końcem" : null;
-//        row.startPicker.setInvalid(invalid);
-//        row.startPicker.setErrorMessage(error);
-//        row.endPicker.setInvalid(invalid);
-//        row.endPicker.setErrorMessage(error);
-//    }
-//
-//    private boolean hasInvalidTimeRanges() {
-//        for (BandConcertParticipation cp : concert.getParticipations()) {
-//            if (cp.getStart() != null && cp.getEnd() != null
-//                    && !cp.getStart().isBefore(cp.getEnd())) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    private void updateSaveButton(Button saveButton) {
-//        saveButton.setEnabled(binder.isValid() && !concert.getParticipations().isEmpty()
-//                && !hasOverlaps() && !hasInvalidTimeRanges());
-//    }
-//
-//    private static class ParticipationRow {
-//        final BandConcertParticipation participation;
-//        final TimePicker startPicker = new TimePicker();
-//        final TimePicker endPicker = new TimePicker();
-//
-//        ParticipationRow(BandConcertParticipation participation) {
-//            this.participation = participation;
-//            startPicker.setValue(participation.getStart());
-//            endPicker.setValue(participation.getEnd());
-//        }
-//    }
 }

@@ -3,6 +3,7 @@ package pl.edu.pja.pk_gorski_filip_16608.model;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -25,12 +26,8 @@ public class Concert extends Event {
 
     public Concert() {}
 
-    public Concert(String name,
-                   java.time.LocalDate date,
-                   java.time.LocalDateTime start,
-                   java.time.LocalDateTime end,
-                   ConcertStatus status) {
-        super(name, date, start, end);
+    public Concert(String name, LocalDateTime start, LocalDateTime end, ConcertStatus status) {
+        super(name, start, end);
         setStatus(status);
     }
 

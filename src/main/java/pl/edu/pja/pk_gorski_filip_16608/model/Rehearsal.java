@@ -2,6 +2,7 @@ package pl.edu.pja.pk_gorski_filip_16608.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,8 +27,8 @@ public class Rehearsal extends Event {
 
     public Rehearsal() {}
 
-    public Rehearsal(String name, java.time.LocalDate date, java.time.LocalDateTime start, java.time.LocalDateTime end, RehearsalType rehearsalType) {
-        super(name, date, start, end);
+    public Rehearsal(String name, LocalDateTime start, LocalDateTime end, RehearsalType rehearsalType) {
+        super(name, start, end);
         setRehearsalType(rehearsalType);
     }
 

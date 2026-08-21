@@ -26,9 +26,8 @@ public abstract class Event {
 
     protected Event() {}
 
-    protected Event(String name, LocalDate date, LocalDateTime start, LocalDateTime end) {
+    protected Event(String name, LocalDateTime start, LocalDateTime end) {
         setName(name);
-        setDate(date);
         setStart(start);
         setEnd(end);
         validateTimeRange();
@@ -57,10 +56,6 @@ public abstract class Event {
         return date;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
     public LocalDateTime getStart() {
         return start;
     }
@@ -68,6 +63,7 @@ public abstract class Event {
     public void setStart(LocalDateTime start) {
         if (start == null) throw new IllegalArgumentException("Event start time is required");
         this.start = start;
+        this.date = start.toLocalDate();
         validateTimeRange();
     }
 

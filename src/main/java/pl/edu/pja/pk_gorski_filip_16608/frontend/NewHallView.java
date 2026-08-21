@@ -131,37 +131,3 @@ public class NewHallView extends VerticalLayout {
         add(concertSelect, concertDetails, hallGrid, buttons);
     }
 }
-
-//        genreSelect.addValueChangeListener(event -> {
-//            Set<Genre> selected = event.getValue();
-//            suppressBandListener = true;
-//            if (selected == null || selected.isEmpty()) {
-//                bandSelect.setItems();
-//                bandSelect.setEnabled(false);
-//
-//                concert.getParticipations().clear();
-//                participationRows.clear();
-//                grid.setItems(participationRows);
-//                validateOverlaps(saveButton);
-//            } else {
-//                Set<Band> previouslySelected = new HashSet<>(bandSelect.getValue());
-//                Set<Band> availableBands = bandService.getBandsByGenres(selected);
-//
-//                bandSelect.setItems(availableBands);
-//                bandSelect.setEnabled(true);
-//
-//                Set<Band> retained = previouslySelected.stream()
-//                        .filter(availableBands::contains)
-//                        .collect(Collectors.toSet());
-//                bandSelect.setValue(retained);
-//
-//                concert.getParticipations().removeIf(cp -> !retained.contains(cp.getBand()));
-//                participationRows.clear();
-//                for (BandConcertParticipation cp : concert.getParticipations()) {
-//                    participationRows.add(new ParticipationRow(cp));
-//                }
-//                grid.setItems(participationRows);
-//                validateOverlaps(saveButton);
-//            }
-//            suppressBandListener = false;
-//        });
