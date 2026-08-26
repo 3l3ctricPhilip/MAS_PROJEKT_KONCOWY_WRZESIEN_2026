@@ -16,85 +16,97 @@ import pl.edu.pja.pk_gorski_filip_16608.model.Concert;
 import pl.edu.pja.pk_gorski_filip_16608.model.ConcertHall;
 import pl.edu.pja.pk_gorski_filip_16608.service.ConcertService;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Route(value = "assignhall", layout = MainView.class)
 public class NewHallView extends VerticalLayout {
 
-    private final ConcertService concertService;
-    private final List<Checkbox> hallCheckboxes = new ArrayList<>();
     private ConcertHall selectedHall;
 
     public NewHallView(ConcertService concertService) {
-        this.concertService = concertService;
 
-        ComboBox<Concert> concertSelect = new ComboBox<>("Wybierz koncert");
-        concertSelect.setItems(concertService.findConcertsWithoutHall());
-        concertSelect.setItemLabelGenerator(c -> c.getName() + " (" + c.getDate() + ")");
-        concertSelect.setWidth("500px");
-
-        Span concertDetails = new Span();
-
-        Grid<ConcertHall> hallGrid = new Grid<>();
-        hallGrid.setWidth("900px");
-        hallGrid.setSelectionMode(Grid.SelectionMode.NONE);
-        hallGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        //PRZYCISK PRZYPISANIA SALI I ANULOWANIA
 
         Button assignButton = new Button("Przypisz salę");
         assignButton.setEnabled(false);
 
-        hallGrid.addComponentColumn(hall -> {
-            Checkbox checkbox = new Checkbox();
-            hallCheckboxes.add(checkbox);
-            checkbox.addValueChangeListener(e -> {
-                if (e.getValue()) {
-                    selectedHall = hall;
-                    hallCheckboxes.stream()
-                            .filter(cb -> cb != checkbox)
-                            .forEach(cb -> cb.setValue(false));
-                    assignButton.setEnabled(concertSelect.getValue() != null);
-                } else if (selectedHall == hall) {
-                    selectedHall = null;
-                    assignButton.setEnabled(false);
-                }
-            });
-            return checkbox;
-        }).setHeader("Wybierz").setWidth("80px").setFlexGrow(0);
+        Button cancelButton = new Button("Anuluj", e ->
+                UI.getCurrent().navigate(MainView.class));
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        hallGrid.addColumn(h -> h.getBuilding().getName())
+        //UTOWRZENIE COMBOBOXA DLA ZAPISANYCH KONCERTÓW BEZ PRZYDZIELONEJ SALI KONCERTOWEJ
+
+        ComboBox<Concert> concertSelect = new ComboBox<>("Wybierz koncert");
+        concertSelect.setItems(concertService.findConcertsWithoutHall());
+        concertSelect.setItemLabelGenerator(concert -> concert.getName() + " (" + concert.getDate() + ")");
+        concertSelect.setWidth("500px");
+
+        //UTWORZENIE GRIDA DLA SAL KONCERTOWYCH
+
+        Span gridLabel = new Span("Wybierz salę");
+        Grid<ConcertHall> hallGrid = new Grid<>();
+        hallGrid.setWidth("900px");
+        hallGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        hallGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        //DODAWANIE KOLUMN DO GRIDA
+
+//        hallGrid.addComponentColumn(concertHall -> {
+//            Checkbox checkbox = new Checkbox();
+//            hallCheckboxes.add(checkbox);
+//
+//            checkbox.addValueChangeListener(event -> {
+//                if(event.getValue()){
+//                    selectedHall = concertHall;
+//                    hallCheckboxes.stream()
+//                            .filter(cb -> cb != checkbox)
+//                            .forEach(cb -> cb.setValue(false));
+//                    assignButton.setEnabled(concertSelect.getValue() != null);
+//                } else if (selectedHall == concertHall){
+//                    selectedHall = null;
+//                    assignButton.setEnabled(false);
+//                }
+//            });
+//
+//            return checkbox;
+//        }).setHeader("Wybierz").setAutoWidth(true);
+
+        hallGrid.addColumn(concertHall -> concertHall.getBuilding().getName())
                 .setHeader("Budynek").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.getName())
+        hallGrid.addColumn(ConcertHall::getName)
                 .setHeader("Sala").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.getCapacity())
+        hallGrid.addColumn(ConcertHall::getCapacity)
                 .setHeader("Pojemność").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.getStageSize() + " m²")
+        hallGrid.addColumn(concertHall -> concertHall.getStageSize() + " m²")
                 .setHeader("Scena").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.getAcousticRating() + "/10")
+        hallGrid.addColumn(concertHall -> concertHall.getAcousticRating() + "/10")
                 .setHeader("Akustyka").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.isLightingSystem() ? "Tak" : "Nie")
+        hallGrid.addColumn(concertHall -> concertHall.isLightingSystem() ? "Tak" : "Nie")
                 .setHeader("Oświetlenie").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.isSoundSystem() ? "Tak" : "Nie")
+        hallGrid.addColumn(concertHall -> concertHall.isSoundSystem() ? "Tak" : "Nie")
                 .setHeader("Nagłośnienie").setAutoWidth(true);
-        hallGrid.addColumn(h -> h.getPricePerHour() + " zł/h")
+        hallGrid.addColumn(concertHall -> concertHall.getPricePerHour() + " zł/h")
                 .setHeader("Cena").setAutoWidth(true);
+
+        //LISTENER DLA WIERSZY Z SALAMI
+
+        hallGrid.addSelectionListener(event -> {
+            selectedHall = event.getFirstSelectedItem().orElse(null);
+            assignButton.setEnabled(selectedHall != null && concertSelect.getValue() != null);
+        });
+
+        //LISTENER DLA WYBRANEGO KONCERTU Z COMBOBOXA I UZUPEŁNIENIE GRIDA
 
         concertSelect.addValueChangeListener(event -> {
             Concert selected = event.getValue();
             // reset stanu — grid odtwarza checkboxy przy nowych items, więc stare referencje stają się nieaktualne
             selectedHall = null;
-            hallCheckboxes.clear();
+            hallGrid.deselectAll();
             if (selected == null) {
-                concertDetails.setText("");
                 hallGrid.setItems();
                 assignButton.setEnabled(false);
             } else {
-                DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
-                DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-                concertDetails.setText(selected.getDate().format(dateFmt)
-                        + ", " + selected.getStart().format(timeFmt)
-                        + " – " + selected.getEnd().format(timeFmt));
                 // filtrowanie po stronie serwera — wyświetlane są tylko sale wolne w terminie wybranego koncertu
                 hallGrid.setItems(concertService.findAvailableHalls(selected.getId()));
                 assignButton.setEnabled(false);
@@ -112,10 +124,9 @@ public class NewHallView extends VerticalLayout {
                         3000, Notification.Position.TOP_CENTER);
                 // pełny reset formularza — ponowne pobranie listy koncertów, bo przypisany koncert nie powinien już się w niej pojawiać
                 selectedHall = null;
-                hallCheckboxes.clear();
+                hallGrid.deselectAll();
                 concertSelect.setItems(concertService.findConcertsWithoutHall());
                 concertSelect.clear();
-                concertDetails.setText("");
                 hallGrid.setItems();
                 assignButton.setEnabled(false);
             } catch (IllegalStateException e) {
@@ -123,11 +134,7 @@ public class NewHallView extends VerticalLayout {
             }
         });
 
-        Button cancelButton = new Button("Anuluj", e ->
-                UI.getCurrent().navigate(MainView.class));
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
         HorizontalLayout buttons = new HorizontalLayout(assignButton, cancelButton);
-        add(concertSelect, concertDetails, hallGrid, buttons);
+        add(concertSelect, gridLabel, hallGrid, buttons);
     }
 }

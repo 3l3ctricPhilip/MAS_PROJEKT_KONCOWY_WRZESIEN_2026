@@ -42,13 +42,13 @@ public class ConcertService {
     @Transactional(readOnly = true)
     public List<ConcertHall> findAvailableHalls(Long concertId) {
         Concert concert = concertRepository.findById(concertId).orElseThrow();
-        List<ConcertHall> available = new ArrayList<>();
+        List<ConcertHall> availableConcertHalls = new ArrayList<>();
         for (ConcertHall hall : concertHallRepository.findAll()) {
             if (hall.isAvailable(concert.getDate(), concert.getStart(), concert.getEnd())) {
-                available.add(hall);
+                availableConcertHalls.add(hall);
             }
         }
-        return available;
+        return availableConcertHalls;
     }
 
     @Transactional(readOnly = true)

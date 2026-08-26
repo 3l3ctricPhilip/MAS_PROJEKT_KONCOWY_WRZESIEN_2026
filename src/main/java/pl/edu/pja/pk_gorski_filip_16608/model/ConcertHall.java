@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -84,7 +86,7 @@ public class ConcertHall extends Room {
         this.concerts = concerts;
     }
 
-    public boolean isAvailable(java.time.LocalDate date, java.time.LocalDateTime start, java.time.LocalDateTime end) {
+    public boolean isAvailable(LocalDate date, LocalDateTime start, LocalDateTime end) {
         for (Concert existingConcert : getConcerts()) {
             if (existingConcert.getDate().equals(date) && existingConcert.getStatus() != ConcertStatus.CANCELLED) {
                 boolean overlaps = start.isBefore(existingConcert.getEnd()) && end.isAfter(existingConcert.getStart());
