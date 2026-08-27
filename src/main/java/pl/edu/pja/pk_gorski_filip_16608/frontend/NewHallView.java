@@ -3,7 +3,6 @@ package pl.edu.pja.pk_gorski_filip_16608.frontend;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -15,9 +14,6 @@ import com.vaadin.flow.router.Route;
 import pl.edu.pja.pk_gorski_filip_16608.model.Concert;
 import pl.edu.pja.pk_gorski_filip_16608.model.ConcertHall;
 import pl.edu.pja.pk_gorski_filip_16608.service.ConcertService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Route(value = "assignhall", layout = MainView.class)
 public class NewHallView extends VerticalLayout {
@@ -52,26 +48,6 @@ public class NewHallView extends VerticalLayout {
 
         //DODAWANIE KOLUMN DO GRIDA
 
-//        hallGrid.addComponentColumn(concertHall -> {
-//            Checkbox checkbox = new Checkbox();
-//            hallCheckboxes.add(checkbox);
-//
-//            checkbox.addValueChangeListener(event -> {
-//                if(event.getValue()){
-//                    selectedHall = concertHall;
-//                    hallCheckboxes.stream()
-//                            .filter(cb -> cb != checkbox)
-//                            .forEach(cb -> cb.setValue(false));
-//                    assignButton.setEnabled(concertSelect.getValue() != null);
-//                } else if (selectedHall == concertHall){
-//                    selectedHall = null;
-//                    assignButton.setEnabled(false);
-//                }
-//            });
-//
-//            return checkbox;
-//        }).setHeader("Wybierz").setAutoWidth(true);
-
         hallGrid.addColumn(concertHall -> concertHall.getBuilding().getName())
                 .setHeader("Budynek").setAutoWidth(true);
         hallGrid.addColumn(ConcertHall::getName)
@@ -89,46 +65,39 @@ public class NewHallView extends VerticalLayout {
         hallGrid.addColumn(concertHall -> concertHall.getPricePerHour() + " zł/h")
                 .setHeader("Cena").setAutoWidth(true);
 
-        //LISTENER DLA WIERSZY Z SALAMI
+        //LISTENER DLA WYBRANEGO KONCERTU Z COMBOBOXA I UZUPEŁNIENIE GRIDA
+
+        concertSelect.addValueChangeListener(event -> {
+            Concert selectedConcert = event.getValue();
+            if (selectedConcert != null) {
+                hallGrid.setItems(concertService.findAvailableHalls(selectedConcert.getId()));
+            } else {
+                hallGrid.setItems();
+            }
+        });
+
+        //LISTENER DLA GRIDA Z SALAMI
 
         hallGrid.addSelectionListener(event -> {
             selectedHall = event.getFirstSelectedItem().orElse(null);
             assignButton.setEnabled(selectedHall != null && concertSelect.getValue() != null);
         });
 
-        //LISTENER DLA WYBRANEGO KONCERTU Z COMBOBOXA I UZUPEŁNIENIE GRIDA
-
-        concertSelect.addValueChangeListener(event -> {
-            Concert selected = event.getValue();
-            // reset stanu — grid odtwarza checkboxy przy nowych items, więc stare referencje stają się nieaktualne
-            selectedHall = null;
-            hallGrid.deselectAll();
-            if (selected == null) {
-                hallGrid.setItems();
-                assignButton.setEnabled(false);
-            } else {
-                // filtrowanie po stronie serwera — wyświetlane są tylko sale wolne w terminie wybranego koncertu
-                hallGrid.setItems(concertService.findAvailableHalls(selected.getId()));
-                assignButton.setEnabled(false);
-            }
-        });
+        //LISTENER DLA PRZYCISKU PRZYPISANIA SALI. ZAPISANIE KONCERTU ORAZ ODŚWIEŻENIE COMBOXA I GRIDA
 
         assignButton.addClickListener(event -> {
             Concert concert = concertSelect.getValue();
-            if (concert == null || selectedHall == null) return;
 
             try {
                 concertService.assignConcertHall(concert.getId(), selectedHall.getId());
                 Notification.show(
                         "Sala \"" + selectedHall.getName() + "\" przypisana do koncertu \"" + concert.getName() + "\"",
                         3000, Notification.Position.TOP_CENTER);
-                // pełny reset formularza — ponowne pobranie listy koncertów, bo przypisany koncert nie powinien już się w niej pojawiać
+
                 selectedHall = null;
                 hallGrid.deselectAll();
                 concertSelect.setItems(concertService.findConcertsWithoutHall());
-                concertSelect.clear();
-                hallGrid.setItems();
-                assignButton.setEnabled(false);
+
             } catch (IllegalStateException e) {
                 Notification.show("Błąd: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER);
             }
