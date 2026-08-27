@@ -1,11 +1,8 @@
 package pl.edu.pja.pk_gorski_filip_16608.frontend;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import pl.edu.pja.pk_gorski_filip_16608.model.BandConcertParticipation;
@@ -14,9 +11,6 @@ import pl.edu.pja.pk_gorski_filip_16608.model.ConcertHall;
 import pl.edu.pja.pk_gorski_filip_16608.service.ConcertService;
 
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Route(value = "myconcerts", layout = MainView.class)
 public class MyConcertsView extends VerticalLayout {
@@ -24,21 +18,27 @@ public class MyConcertsView extends VerticalLayout {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    private final List<Checkbox> concertCheckboxes = new ArrayList<>();
     private Concert selectedConcert;
 
     public MyConcertsView(ConcertService concertService) {
         setSpacing(false);
         setPadding(true);
 
-        Grid<Concert> concertGrid = new Grid<>();
-        concertGrid.setWidth("700px");
-        concertGrid.setAllRowsVisible(true);
-        // NONE + ręczne checkboxy zamiast SINGLE — wbudowana selekcja Vaadin nie pozwala na odznaczenie kliknięciem tego samego wiersza
-        concertGrid.setSelectionMode(Grid.SelectionMode.NONE);
-        concertGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        //UTWORZENIE GRIDA DLA WSZYSTKICH KONCERTÓW DANEGO BOOKERA
 
-        concertGrid.setItems(concertService.findConcertsByBooker(1L));
+        Grid<Concert> concertsGrid = new Grid<>();
+        concertsGrid.setWidth("700px");
+        concertsGrid.setAllRowsVisible(true);
+        concertsGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        concertsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        concertsGrid.addColumn(Concert::getName).setHeader("Nazwa").setAutoWidth(true);
+        concertsGrid.addColumn(c -> c.getDate().format(DATE_FMT)).setHeader("Data").setAutoWidth(true);
+        concertsGrid.addColumn(c -> c.getStart().format(TIME_FMT) + " – " + c.getEnd().format(TIME_FMT)).setHeader("Godziny").setAutoWidth(true);
+
+        //UZUPEŁNIENIE GRIDA Z KONCERTAMI
+
+        concertsGrid.setItems(concertService.findConcertsByBooker(1L));
 
         VerticalLayout detailsPanel = new VerticalLayout();
         detailsPanel.setVisible(false);
@@ -46,112 +46,77 @@ public class MyConcertsView extends VerticalLayout {
         detailsPanel.setSpacing(false);
         detailsPanel.getStyle().set("gap", "var(--lumo-space-xs)");
 
-        H3 concertName = new H3();
-        Span dateSpan = new Span();
-        Span timeSpan = new Span();
-        Span statusSpan = new Span();
-
         H4 hallHeader = new H4();
-        Span hallNameSpan = new Span();
-        Span buildingSpan = new Span();
-        Span addressSpan = new Span();
-        Span capacitySpan = new Span();
 
-        H4 lineupHeader = new H4("Lineup");
+        //UTWORZENIE GRIDA DLA SZCZEGÓŁÓW KONCERTU
+
+        Grid<Concert> concertDetailsGrid = new Grid<>();
+        concertDetailsGrid.setWidth("700px");
+        concertDetailsGrid.setAllRowsVisible(true);
+        concertDetailsGrid.addColumn(Concert::getName).setHeader("Nazwa").setAutoWidth(true);
+        concertDetailsGrid.addColumn(Concert::getDate).setHeader("Dzień").setAutoWidth(true);
+        concertDetailsGrid.addColumn(Concert::getStart).setHeader("Start").setAutoWidth(true);
+        concertDetailsGrid.addColumn(Concert::getEnd).setHeader("Koniec").setAutoWidth(true);
+        concertDetailsGrid.addColumn(Concert::getStatus).setHeader("Status").setAutoWidth(true);
+
+        //UTWORZENIE GRIDA DLA SZCZEGÓŁÓW SALI KONCERTOWEJ
+
+        Grid<ConcertHall> hallDetailsGrid = new Grid<>();
+        hallDetailsGrid.setWidth("700px");
+        hallDetailsGrid.setAllRowsVisible(true);
+        hallDetailsGrid.addColumn(concertHall -> concertHall.getBuilding().getName()).setHeader("Klub").setAutoWidth(true);
+        hallDetailsGrid.addColumn(ConcertHall::getName).setHeader("Sala").setAutoWidth(true);
+
+        hallDetailsGrid.addColumn(concertHall -> concertHall.getBuilding().getStreet()
+                + " " + concertHall.getBuilding().getNumber() + ", " + concertHall.getBuilding().getCity()
+                + " " + concertHall.getBuilding().getCountry()).setHeader("Adres").setAutoWidth(true);
+
+        hallDetailsGrid.addColumn(ConcertHall::getCapacity).setHeader("Pojemność").setAutoWidth(true);
+
+        //UTWORZENIE GRIDA Z LINEUPEM
+
         Grid<BandConcertParticipation> lineupGrid = new Grid<>();
         lineupGrid.setWidth("700px");
-        lineupGrid.addColumn(cp -> {
-            String name = cp.getBand().getName();
-            String genres = cp.getBand().getGenres().stream()
-                    .map(g -> g.getName())
-                    .sorted()
-                    .collect(Collectors.joining(", "));
-            return genres.isEmpty() ? name : name + " (" + genres + ")";
-        }).setHeader("Zespół").setAutoWidth(true);
-        lineupGrid.addColumn(cp -> cp.getStart().format(TIME_FMT))
+        lineupGrid.setAllRowsVisible(true);
+
+        lineupGrid.addColumn(bandConcertParticipation -> bandConcertParticipation.getBand().getName()
+        ).setHeader("Zespół").setAutoWidth(true);
+        lineupGrid.addColumn(bandConcertParticipation -> bandConcertParticipation.getStart().format(TIME_FMT))
                 .setHeader("Start").setAutoWidth(true);
-        lineupGrid.addColumn(cp -> cp.getEnd().format(TIME_FMT))
+        lineupGrid.addColumn(bandConcertParticipation -> bandConcertParticipation.getEnd().format(TIME_FMT))
                 .setHeader("Koniec").setAutoWidth(true);
 
-        detailsPanel.add(concertName, dateSpan, timeSpan, statusSpan,
-                hallHeader, hallNameSpan, buildingSpan, addressSpan, capacitySpan,
-                lineupHeader, lineupGrid);
+        detailsPanel.add(hallHeader, hallDetailsGrid, concertDetailsGrid, lineupGrid);
 
 
-        concertGrid.addComponentColumn(concert -> {
-            Checkbox checkbox = new Checkbox();
-            concertCheckboxes.add(checkbox);
-            checkbox.addValueChangeListener(e -> {
-                if (e.getValue()) {
-                    selectedConcert = concert;
-                    concertCheckboxes.stream()
-                            .filter(cb -> cb != checkbox)
-                            .forEach(cb -> cb.setValue(false));
-                    showDetails(concertService, concert,
-                            concertName, dateSpan, timeSpan, statusSpan,
-                            hallHeader, hallNameSpan, buildingSpan, addressSpan, capacitySpan,
-                            lineupGrid, detailsPanel);
-                } else if (selectedConcert == concert) {
-                    selectedConcert = null;
-                    detailsPanel.setVisible(false);
-                }
-            });
-            return checkbox;
-        }).setHeader("Wybierz").setWidth("80px").setFlexGrow(0);
+        concertsGrid.addSelectionListener(event -> {
+            selectedConcert = event.getFirstSelectedItem().orElse(null);
+            showDetails(concertService, selectedConcert, hallHeader, concertDetailsGrid, hallDetailsGrid, lineupGrid, detailsPanel);
+        });
 
-        concertGrid.addColumn(Concert::getName)
-                .setHeader("Nazwa").setAutoWidth(true);
-        concertGrid.addColumn(c -> c.getDate().format(DATE_FMT))
-                .setHeader("Data").setAutoWidth(true);
-        concertGrid.addColumn(c -> c.getStart().format(TIME_FMT)
-                + " – " + c.getEnd().format(TIME_FMT))
-                .setHeader("Godziny").setAutoWidth(true);
-
-        add(concertGrid, detailsPanel);
+        add(concertsGrid, detailsPanel);
     }
 
     private void showDetails(ConcertService concertService, Concert selected,
-                             H3 concertName, Span dateSpan, Span timeSpan, Span statusSpan,
-                             H4 hallHeader, Span hallNameSpan, Span buildingSpan,
-                             Span addressSpan, Span capacitySpan,
-                             Grid<BandConcertParticipation> lineupGrid,
-                             VerticalLayout detailsPanel) {
+                             H4 hallHeader, Grid<Concert> detailsGrid, Grid<ConcertHall> hallDetailsGrid,
+                             Grid<BandConcertParticipation> lineupGrid, VerticalLayout detailsPanel) {
 
         // osobne pobranie koncertu w ramach transakcji — wymusza inicjalizację LAZY kolekcji (gatunki zespołów), które poza transakcją rzuciłyby LazyInitializationException
         Concert concert = concertService.findConcertWithDetails(selected.getId());
 
-        concertName.setText(concert.getName());
-        dateSpan.setText("Data: " + concert.getDate().format(DATE_FMT));
-        timeSpan.setText("Godziny: " + concert.getStart().format(TIME_FMT)
-                + " – " + concert.getEnd().format(TIME_FMT));
-        statusSpan.setText("Status: " + concert.getStatus().getDisplayName());
-
         ConcertHall hall = concert.getConcertHall();
         if (hall != null) {
-            hallHeader.setText("Sala koncertowa");
-            hallNameSpan.setText("Sala: " + hall.getName());
-            buildingSpan.setText("Budynek: " + hall.getBuilding().getName());
-            addressSpan.setText("Adres: " + hall.getBuilding().getStreet() + " "
-                    + hall.getBuilding().getNumber() + ", "
-                    + hall.getBuilding().getCity() + ", "
-                    + hall.getBuilding().getCountry());
-            capacitySpan.setText("Pojemność: " + hall.getCapacity());
-            hallNameSpan.setVisible(true);
-            buildingSpan.setVisible(true);
-            addressSpan.setVisible(true);
-            capacitySpan.setVisible(true);
+            hallDetailsGrid.setItems(hall);
         } else {
             hallHeader.setText("Sala koncertowa: nie przypisano");
-            hallNameSpan.setVisible(false);
-            buildingSpan.setVisible(false);
-            addressSpan.setVisible(false);
-            capacitySpan.setVisible(false);
         }
 
-        // jawne sortowanie — Hibernate nie gwarantuje kolejności elementów w Set ładowanym z bazy
+        detailsGrid.setItems(concert);
+
         lineupGrid.setItems(concert.getParticipations().stream()
                 .sorted((a, b) -> a.getStart().compareTo(b.getStart()))
                 .toList());
+
         detailsPanel.setVisible(true);
     }
 }
