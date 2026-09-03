@@ -1,5 +1,3 @@
-*[English version](README.md)*
-
 *[Wersja polska](README.pl.md)*
 
 # BandBase
