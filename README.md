@@ -16,9 +16,9 @@ Originally developed as a final project for *Modelling and Analysis of Informati
 
 **Review concerts.** Selecting a concert reveals its details, venue with full address, and the band-by-band running order, all sorted chronologically.
 
-<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/16c7a599-d0f5-4ea9-a3d1-7d8014f3f442" />
+<img width="2560" height="1440" alt="Screenshot 2026-09-03 165925" src="https://github.com/user-attachments/assets/3d26338c-82cd-4180-a55a-19878c1a84fd" />
 
-<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/2c481fd3-ab3b-48b4-8f88-533ee161f9e2" />
+<img width="2560" height="1440" alt="Screenshot 2026-09-03 165941" src="https://github.com/user-attachments/assets/0a56fdb9-ab1b-428f-a962-69f7976ea010" />
 
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4343629b-e198-4dee-bf22-10c62bddc030" />
 
@@ -29,7 +29,7 @@ Fifteen entities across three inheritance hierarchies, each mapped with the JPA 
 | Hierarchy | Strategy | Why |
 |---|---|---|
 | `Person` → `Musician`, `Booker`, `Owner` | `SINGLE_TABLE` | Subtypes share most attributes; avoids joins on every read |
-| `Event` → `Concert`, `Rehearsal` | `JOINED` | Subtypes diverge substantially; keeps the schema normalised |
+| `Event` → `Concert`, `Rehearsal` | `JOINED` | Subtypes diverge substantially; keeps the schema normalised |  
 | `Room` → `ConcertHall`, `RehearsalRoom` | `SINGLE_TABLE` | Few subtypes, simple retrieval |
 
 ### Design decisions worth pointing at
