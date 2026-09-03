@@ -18,6 +18,12 @@ Projekt powstał jako praca końcowa z przedmiotu *Modelowanie i Analiza System�
 
 **Przegląd koncertów.** Wybór koncertu odsłania jego szczegóły, salę z pełnym adresem oraz rozpiskę zespołów uporządkowaną chronologicznie.
 
+<img width="2560" height="1440" alt="Screenshot 2026-09-03 165925" src="https://github.com/user-attachments/assets/1f525897-cbd5-4385-ba9b-415dde7cbafa" />
+
+<img width="2560" height="1440" alt="Screenshot 2026-09-03 165941" src="https://github.com/user-attachments/assets/dc97ebe9-3fb0-4b18-a96d-dd5469ebef71" />
+
+<img width="2560" height="1440" alt="Screenshot 2026-09-03 165956" src="https://github.com/user-attachments/assets/3d2109c9-e44a-466c-8ad0-1484468d25ea" />
+
 ## Model dziedzinowy
 
 Piętnaście encji w trzech hierarchiach dziedziczenia, każda odwzorowana strategią JPA dobraną do jej charakteru:
