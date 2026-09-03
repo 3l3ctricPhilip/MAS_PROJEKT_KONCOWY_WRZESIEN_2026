@@ -1,3 +1,5 @@
+*[English version](README.md)*
+
 # BandBase
 
 A booking-management web application for the live music industry, built with Spring Boot and Vaadin Flow. A booker schedules concerts, builds a stage timetable from bands filtered by genre, and reserves venue halls with automatic conflict detection.
