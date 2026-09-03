@@ -13,7 +13,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
-import lombok.Getter;
 import pl.edu.pja.pk_gorski_filip_16608.model.*;
 import pl.edu.pja.pk_gorski_filip_16608.service.BandService;
 import pl.edu.pja.pk_gorski_filip_16608.service.ConcertService;
@@ -50,7 +49,6 @@ public class NewConcertView extends VerticalLayout {
         this.bandService = bandService;
         this.concertService = concertService;
 
-        //PRZYCISK ZAPISU I ANULOWANIA
 
         saveButton = new Button("Zapisz", event -> {
             try {
@@ -73,7 +71,6 @@ public class NewConcertView extends VerticalLayout {
 
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        //FORMULARZ
 
         TextField title = new TextField("Nazwa koncertu");
         title.setWidth("500px");
@@ -81,7 +78,7 @@ public class NewConcertView extends VerticalLayout {
         DateTimePicker startDateTime = new DateTimePicker("Rozpoczęcie koncertu");
         DateTimePicker endDateTime = new DateTimePicker("Zakończenie koncertu");
 
-        TextField priceOfTicket = new TextField("Cena bilteu");
+        TextField priceOfTicket = new TextField("Cena biletu");
         priceOfTicket.setWidth("170px");
 
         //WALIDACJA FORMULARZA Z WYKORZYSTANIEM BINDERA (WALIDATOR ZWRACA TRUE)
@@ -106,14 +103,12 @@ public class NewConcertView extends VerticalLayout {
 
         binder.addStatusChangeListener(event -> updateSaveButton());
 
-        //UZUPEŁNIWNIE GATUNKÓW
 
         MultiSelectComboBox<Genre> genreSelect = new MultiSelectComboBox<>("Gatunek muzyczny");
         genreSelect.setItems(genreService.getAllGenres());
         genreSelect.setItemLabelGenerator(Genre::getName);
         genreSelect.setWidth("500px");
 
-        //UTOWRZENIE COMBOBOX DLA ZESPOŁÓW
 
         MultiSelectComboBox<Band> bandSelect = new MultiSelectComboBox<>("Zespoły muzyczne");
         bandSelect.setItemLabelGenerator(Band::getName);
@@ -121,7 +116,6 @@ public class NewConcertView extends VerticalLayout {
         bandSelect.setEnabled(false);
         bandSelect.setTooltipText("Wybierz gatunki muzyczne, aby zobaczyć dostępne zespoły");
 
-        //ZAZNACZENIE GATUNKÓW I UZUPEŁNIENIE COMBOBOXA Z ZESP0ŁAMI
 
         genreSelect.addValueChangeListener(event -> {
             Set<Genre> selected = event.getValue();
@@ -135,40 +129,41 @@ public class NewConcertView extends VerticalLayout {
             }
         });
 
-        //GRID DO UTWORZEBNIA TIMETABLE KONCERTU
 
-        Grid<TimetableRow> grid = new Grid<>();
-        grid.setWidth("800px");
+        Grid<TimetableRow> timetableGrid = new Grid<>();
+        timetableGrid.setWidth("800px");
 
-        grid.addColumn(timetableRow -> timetableRow.bandConcertParticipation.getBand().getName()).setHeader("Zespół").setAutoWidth(true);
+        timetableGrid.addColumn(timetableRow -> timetableRow.bandConcertParticipation.getBand().getName()).setHeader("Zespół").setAutoWidth(true);
 
-        grid.addComponentColumn(timetableRow -> {
+        timetableGrid.addComponentColumn(timetableRow -> {
             if (startDateTime.getValue() != null)
                 timetableRow.startBandConcert.setMin(startDateTime.getValue().toLocalTime());
             if (endDateTime.getValue() != null)
                 timetableRow.startBandConcert.setMax(endDateTime.getValue().toLocalTime());
-            timetableRow.startBandConcert.addValueChangeListener(e -> {
-                timetableRow.bandConcertParticipation.setStart(e.getValue());
-
+            timetableRow.startBandConcert.addValueChangeListener(event -> {
+                if (event.getValue() != null) {
+                    timetableRow.bandConcertParticipation.setStart(event.getValue());
+                }
                 updateSaveButton();
             });
             return timetableRow.startBandConcert;
         }).setHeader("Godzina rozpoczęcia").setWidth("200px");
 
-        grid.addComponentColumn(timetableRow -> {
+        timetableGrid.addComponentColumn(timetableRow -> {
             if (startDateTime.getValue() != null)
                 timetableRow.endBandConcert.setMin(startDateTime.getValue().toLocalTime());
             if (endDateTime.getValue() != null)
                 timetableRow.endBandConcert.setMax(endDateTime.getValue().toLocalTime());
-            timetableRow.endBandConcert.addValueChangeListener(e -> {
-                timetableRow.bandConcertParticipation.setEnd(e.getValue());
-
+            timetableRow.endBandConcert.addValueChangeListener(event -> {
+                if (event.getValue() != null) {
+                    timetableRow.bandConcertParticipation.setEnd(event.getValue());
+                }
                 updateSaveButton();
             });
             return timetableRow.endBandConcert;
         }).setHeader("Godzina zakończenia").setWidth("200px");
 
-        grid.addComponentColumn(timetableRow -> {
+        timetableGrid.addComponentColumn(timetableRow -> {
             Button removeButton = new Button("Usuń");
             removeButton.addClickListener(e -> {
                 Set<Band> bands = new HashSet<>(bandSelect.getValue());
@@ -178,7 +173,7 @@ public class NewConcertView extends VerticalLayout {
             return removeButton;
         }).setWidth("120px");
 
-        //USTAWIENIE MIN I MAX GODZINY W TIMETABLE DLA KAŻDEGO ZESPOŁU - WG USTALONEJ WCZEŚNIEJ GODZINY ROZOCZĘCIA I ZAKOŃCZEIA KONCERTU
+        //USTAWIENIE MIN I MAX GODZINY W TIMETABLE DLA KAŻDEGO ZESPOŁU - WG USTALONEJ WCZEŚNIEJ GODZINY ROZPOCZĘCIA I ZAKOŃCZENIA KONCERTU
 
         startDateTime.addValueChangeListener(e -> {
             LocalTime min = e.getValue() != null ? e.getValue().toLocalTime() : null;
@@ -196,7 +191,7 @@ public class NewConcertView extends VerticalLayout {
             });
         });
 
-        //UZUPEŁNEINIE GRIDA ZESPOŁAMI I GODZINAMI - TIMETABLE
+        //UZUPEŁNIENIE GRIDA TIMETABLE ZESPOŁAMI I GODZINAMI
 
         bandSelect.addValueChangeListener(event -> {
             LocalTime defaultStart = startDateTime.getValue() != null ? startDateTime.getValue().toLocalTime() : LocalTime.of(20, 0);
@@ -221,19 +216,20 @@ public class NewConcertView extends VerticalLayout {
                             bandConcertParticipation.getBand().equals(band));
                 }
             }
-            grid.setItems(timetableRows);
+            timetableGrid.setItems(timetableRows);
 
             updateSaveButton();
         });
 
-
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        add(title, startDateTime, endDateTime, priceOfTicket, genreSelect, bandSelect, grid, buttons);
+        add(title, startDateTime, endDateTime, priceOfTicket, genreSelect, bandSelect, timetableGrid, buttons);
     }
 
     boolean hasInvalidTimeRange() {
         for (TimetableRow timetableRow : timetableRows) {
-            if (!timetableRow.endBandConcert.getValue().isAfter(timetableRow.startBandConcert.getValue())) {
+            LocalTime start = timetableRow.startBandConcert.getValue();
+            LocalTime end = timetableRow.endBandConcert.getValue();
+            if (start == null || end == null || end.isBefore(start)) {
                 return true;
             }
         }
@@ -256,13 +252,13 @@ public class NewConcertView extends VerticalLayout {
         saveButton.setEnabled(
                 binder.isValid()
                         && !concert.getParticipations().isEmpty()
-                        && !hasOverlaps()
                         && !hasInvalidTimeRange()
+                        && !hasOverlaps()
         );
     }
 
     private static class TimetableRow {
-        @Getter
+
         final BandConcertParticipation bandConcertParticipation;
         final TimePicker startBandConcert = new TimePicker();
         final TimePicker endBandConcert = new TimePicker();

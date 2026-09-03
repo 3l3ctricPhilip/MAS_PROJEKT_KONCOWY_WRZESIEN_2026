@@ -33,7 +33,6 @@ public class BandConcertParticipation {
         setBand(band);
         setStart(start);
         setEnd(end);
-        //validateTimeRange();
     }
 
     public Long getId() {
@@ -69,7 +68,6 @@ public class BandConcertParticipation {
     public void setStart(LocalTime start) {
         if (start == null) throw new IllegalArgumentException("Start time is required");
         this.start = start;
-        //validateTimeRange();
     }
 
     public LocalTime getEnd() {
@@ -79,7 +77,6 @@ public class BandConcertParticipation {
     public void setEnd(LocalTime end) {
         if (end == null) throw new IllegalArgumentException("End time is required");
         this.end = end;
-        //validateTimeRange();
     }
 
     private void validateTimeRange() {

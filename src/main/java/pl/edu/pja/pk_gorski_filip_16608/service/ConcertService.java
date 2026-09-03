@@ -64,7 +64,7 @@ public class ConcertService {
         }
         return concert;
     }
-    
+
     @Transactional
     public void assignConcertHall(Long concertId, Long concertHallId) {
         Concert concert = concertRepository.findById(concertId).orElseThrow();

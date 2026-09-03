@@ -23,7 +23,7 @@ public class Genre {
     @ManyToMany(mappedBy = "genres")
     private Set<Musician> musicians = new HashSet<>();
 
-    @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "genres")
     private Set<Band> bands = new HashSet<>();
 
     public Genre() {}

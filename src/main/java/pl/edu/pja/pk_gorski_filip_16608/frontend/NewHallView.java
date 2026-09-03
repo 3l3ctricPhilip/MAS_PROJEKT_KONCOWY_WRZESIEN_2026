@@ -22,7 +22,6 @@ public class NewHallView extends VerticalLayout {
 
     public NewHallView(ConcertService concertService) {
 
-        //PRZYCISK PRZYPISANIA SALI I ANULOWANIA
 
         Button assignButton = new Button("Przypisz salę");
         assignButton.setEnabled(false);
@@ -31,22 +30,18 @@ public class NewHallView extends VerticalLayout {
                 UI.getCurrent().navigate(MainView.class));
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        //UTOWRZENIE COMBOBOXA DLA ZAPISANYCH KONCERTÓW BEZ PRZYDZIELONEJ SALI KONCERTOWEJ
 
         ComboBox<Concert> concertSelect = new ComboBox<>("Wybierz koncert");
         concertSelect.setItems(concertService.findConcertsWithoutHall());
         concertSelect.setItemLabelGenerator(concert -> concert.getName() + " (" + concert.getDate() + ")");
         concertSelect.setWidth("500px");
 
-        //UTWORZENIE GRIDA DLA SAL KONCERTOWYCH
 
         Span gridLabel = new Span("Wybierz salę");
         Grid<ConcertHall> hallGrid = new Grid<>();
         hallGrid.setWidth("900px");
         hallGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         hallGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-
-        //DODAWANIE KOLUMN DO GRIDA
 
         hallGrid.addColumn(concertHall -> concertHall.getBuilding().getName())
                 .setHeader("Budynek").setAutoWidth(true);
@@ -65,7 +60,6 @@ public class NewHallView extends VerticalLayout {
         hallGrid.addColumn(concertHall -> concertHall.getPricePerHour() + " zł/h")
                 .setHeader("Cena").setAutoWidth(true);
 
-        //LISTENER DLA WYBRANEGO KONCERTU Z COMBOBOXA I UZUPEŁNIENIE GRIDA
 
         concertSelect.addValueChangeListener(event -> {
             Concert selectedConcert = event.getValue();
@@ -76,14 +70,11 @@ public class NewHallView extends VerticalLayout {
             }
         });
 
-        //LISTENER DLA GRIDA Z SALAMI
-
         hallGrid.addSelectionListener(event -> {
             selectedHall = event.getFirstSelectedItem().orElse(null);
             assignButton.setEnabled(selectedHall != null && concertSelect.getValue() != null);
         });
 
-        //LISTENER DLA PRZYCISKU PRZYPISANIA SALI. ZAPISANIE KONCERTU ORAZ ODŚWIEŻENIE COMBOXA I GRIDA
 
         assignButton.addClickListener(event -> {
             Concert concert = concertSelect.getValue();
