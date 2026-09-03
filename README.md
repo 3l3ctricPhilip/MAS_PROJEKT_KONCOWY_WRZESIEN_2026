@@ -16,6 +16,12 @@ Originally developed as a final project for *Modelling and Analysis of Informati
 
 **Review concerts.** Selecting a concert reveals its details, venue with full address, and the band-by-band running order, all sorted chronologically.
 
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/16c7a599-d0f5-4ea9-a3d1-7d8014f3f442" />
+
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/2c481fd3-ab3b-48b4-8f88-533ee161f9e2" />
+
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/4343629b-e198-4dee-bf22-10c62bddc030" />
+
 ## Domain model
 
 Fifteen entities across three inheritance hierarchies, each mapped with the JPA strategy that fits its shape:
